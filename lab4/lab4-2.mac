@@ -1,0 +1,34 @@
+;-- Макросы ------------------------------------------------------------------------------------------------------------
+
+CODE_BYTE = 5Ah						; код шифрования
+
+; Создать зашифрованный кодом CODE_BYTE пароль из символов String, заключенных <в угловые скобки>
+StrCipher	macro	String
+	forc	x, <String>
+		DB	'&x' xor CODE_BYTE
+	endm
+endm
+
+; Вывести строку по адресу TextAddr (задаётся без директивы addr или offset) в элемент диалога Id
+SetText		macro	Id, TextAddr
+		invoke	SetDlgItemText, hwnd, Id, addr TextAddr
+endm
+
+; Проверить пароль в строке String (задаётся без директивы addr или offset)
+; Возвращает ZF=1 в случае успеха
+CheckPassword	macro String
+		local A
+		push esi
+		push edi
+		mov ecx,PwdLen				; длина пароля
+		mov esi,offset String
+		mov edi,offset Pwd
+
+	A:	lodsb					; читаем символ пароля
+		xor al,CODE_BYTE			; раскодируем его
+		scasb					; сравниваем его с символом
+		loopz A					; повторяем ECX раз, пока совпадают
+
+		pop edi
+		pop esi
+endm
